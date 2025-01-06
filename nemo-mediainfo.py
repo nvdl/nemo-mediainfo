@@ -1,4 +1,5 @@
 import os
+import exifread
 import pymediainfo
 import urllib.parse
 
@@ -7,11 +8,6 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Nemo", "3.0")
 
 from gi.repository import GObject, Gtk, Nemo  # noqa: E402
-# ==============================================================================
-try:
-    import exifread
-except Exception:
-    exifread = None
 # ==============================================================================
 GUI = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -189,33 +185,32 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
 
                     mediafile.tracks.append(mediatrack)
 
-                    if exifread != None:
-                        with open(filename, "rb") as f:
-                            tags = exifread.process_file(f)
+                    with open(filename, "rb") as fData:
+                        tags = exifread.process_file(fData)
 
-                            if len(tags) > 0:
-                                mediatrack.append("Camera brand", tags.get("Image Make", None))
-                                mediatrack.append("Camera model", tags.get("Image Model", None))
-                                mediatrack.append("Date taken", tags.get("Image DateTime", None))
+                    if len(tags) > 0:
+                        mediatrack.append("Camera brand", tags.get("Image Make", None))
+                        mediatrack.append("Camera model", tags.get("Image Model", None))
+                        mediatrack.append("Date taken", tags.get("Image DateTime", None))
 
-                                if "EXIF ExposureTime" in tags:
-                                    mediatrack.append("Exposure time", str(tags["EXIF ExposureTime"]) + " sec.")
+                        if "EXIF ExposureTime" in tags:
+                            mediatrack.append("Exposure time", str(tags["EXIF ExposureTime"]) + " sec.")
 
-                                mediatrack.append("Flash fired", tags.get("EXIF Flash", None))
-                                mediatrack.append("Metering mode", tags.get("EXIF MeteringMode", None))
+                        mediatrack.append("Flash fired", tags.get("EXIF Flash", None))
+                        mediatrack.append("Metering mode", tags.get("EXIF MeteringMode", None))
 
-                                exifmediatrack = MediaFileTrack("Image EXIF Data")
+                        exifmediatrack = MediaFileTrack("Image EXIF Data")
 
-                                for tag in tags.keys():
-                                    if tag not in ("JPEGThumbnail",
-                                                   "TIFFThumbnail",
-                                                   "Filename",
-                                                   "EXIF MakerNote",
-                                                   "EXIF UserComment"
-                                                   ):
-                                        exifmediatrack.append(tag, tags[tag])
+                        for tag in tags.keys():
+                            if tag not in ("JPEGThumbnail",
+                                           "TIFFThumbnail",
+                                           "Filename",
+                                           "EXIF MakerNote",
+                                           "EXIF UserComment"
+                                           ):
+                                exifmediatrack.append(tag, tags[tag])
 
-                                mediafile.tracks.append(exifmediatrack)
+                        mediafile.tracks.append(exifmediatrack)
 
             if len(mediafile.tracks) == 0:
                 continue
