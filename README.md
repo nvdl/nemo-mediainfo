@@ -1,11 +1,10 @@
-# The Script
-View video/audio/image information from the properties tab in Nemo.
+View video, audio and image information from the properties tab in Nemo.
 
-![image](https://github.com/chocolateimage/nemo-mediainfo/assets/45315451/0a6fb0c9-c24b-48da-9bb0-1774a21e44b7)
-
-### Installation
-
-Clone the repository.
+# Installation
+Clone the repository (or download the ZIP).
+```
+git clone <this-repo>
+```
 
 Install the dependencies:
 ```
@@ -23,3 +22,14 @@ Nemo needs to be restarted. Close all the instances or do:
 ```
 killall nemo
 ```
+
+# Screenshots
+
+## Video file
+![screenshot-1](doc/images/screenshot-video.png?raw=true "Screenshot 1")
+
+## Audio file
+![screenshot-2](doc/images/screenshot-audio.png?raw=true "Screenshot 2")
+
+## Image file
+![screenshot-3](doc/images/screenshot-image.png?raw=true "Screenshot 3")
