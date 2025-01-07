@@ -40,8 +40,8 @@ TIME_DURATION_UNITS = (
     ("week", 60 * 60 * 24 * 7),
     ("day", 60 * 60 * 24),
     ("hour", 60 * 60),
-    ("min", 60),
-    ("sec", 1)
+    ("minute", 60),
+    ("second", 1)
 )
 # ==============================================================================
 def human_time_duration(seconds):
@@ -57,7 +57,42 @@ def human_time_duration(seconds):
         if amount > 0:
             parts.append("{} {}{}".format(amount, unit, "" if amount == 1 else "s"))
 
-    return ", ".join(parts)
+    ret = ", ".join(parts[:-1]) + " and " + parts[-1]
+
+    return ret
+# ==============================================================================
+def track_format_info_to_str(track):
+
+    str_format_info = None
+
+    if track.format is not None:
+        str_format_info = track.format
+
+        if track.format_info is not None:
+            str_format_info += " (" + track.format_info + ")"
+
+    return str_format_info
+# ==============================================================================
+def track_duration_to_str(track):
+
+    str_duration = human_time_duration(float(track.duration) / 1000)
+
+    if track.other_duration is not None and len(track.other_duration) >= 4:
+        str_duration += " (" + track.other_duration[3] + ")"
+
+    return str_duration
+# ==============================================================================
+def track_codec_to_str(track):
+
+    str_codec = None
+
+    if track.codec_id is not None:
+        str_codec = track.codec_id
+
+        if track.codec_id_info is not None:
+            str_codec += " (" + track.codec_id_info + ")"
+
+    return str_codec
 # ==============================================================================
 class MediaFile():
 
@@ -113,16 +148,19 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                 if track.track_type == "General":
                     mediatrack = MediaFileTrack("General")
 
-                    if track.album != None:
-                        mediatrack.append("Album", track.album)
-
-                    if track.track_name != None:
+                    if track.track_name is not None:
                         mediatrack.append("Title", track.track_name)
 
-                    if track.performer != None:
+                    if track.performer is not None:
                         mediatrack.append("Artist", track.performer)
 
-                    if track.comment != None:
+                    if track.album is not None:
+                        mediatrack.append("Album", track.album)
+
+                    if track.genre is not None:
+                        mediatrack.append("Genre", track.genre)
+
+                    if track.comment is not None:
                         mediatrack.append("Comment", track.comment)
 
                     if len(mediatrack.properties) > 0:
@@ -136,18 +174,33 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if fps.is_integer():
                         fps = int(fps)
 
-                    if track.format_info == None:
-                        mediatrack.append("Format", track.format)
+                    str_format_info = track_format_info_to_str(track)
 
-                    else:
-                        mediatrack.append("Format", track.format + " (" + str(track.format_info) + ")")
+                    if str_format_info is not None:
+                        mediatrack.append("Format", str_format_info)
 
-                    mediatrack.append("Frame Rate", str(fps) + " FPS (" + str(track.frame_rate_mode) + ")")
+                    if track.format_profile is not None:
+                        mediatrack.append("Format profile", track.format_profile)
+
+                    if track.internet_media_type is not None:
+                        mediatrack.append("Internet media type", track.internet_media_type)
+
+                    str_codec = track_codec_to_str(track)
+
+                    if str_codec is not None:
+                        mediatrack.append("Codec", str_codec)
+
+                    mediatrack.append("Frame rate", str(fps) + " FPS (" + str(track.frame_rate_mode) + ")")
+
                     mediatrack.append("Width", str(track.width) + " pixels")
                     mediatrack.append("Height", str(track.height) + " pixels")
-                    mediatrack.append("Duration", human_time_duration(float(track.duration) / 1000))
 
-                    if track.bit_rate != None:
+                    if track.other_display_aspect_ratio is not None:
+                        mediatrack.append("Aspect ratio", ", ".join(track.other_display_aspect_ratio))
+
+                    mediatrack.append("Duration", track_duration_to_str(track))
+
+                    if track.bit_rate is not None:
                         mediatrack.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
 
                     mediatrack.append("Bit depth", str(track.bit_depth) + " bits")
@@ -159,14 +212,47 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                 elif track.track_type == "Audio":
                     mediatrack = MediaFileTrack("Audio")
 
-                    mediatrack.append("Format", track.format)
-                    mediatrack.append("Mode", track.mode)
-                    mediatrack.append("Channels", track.channel_s)
-                    mediatrack.append("Duration", human_time_duration(float(track.duration) / 1000))
-                    mediatrack.append("Sample rate", str(track.sampling_rate / 1000) + " kbps")
+                    str_format_info = track_format_info_to_str(track)
 
-                    if track.bit_rate != None:
+                    if str_format_info is not None:
+                        mediatrack.append("Format", str_format_info)
+
+                    if track.format_profile is not None:
+                        mediatrack.append("Format profile", track.format_profile)
+
+                    if track.internet_media_type is not None:
+                        mediatrack.append("Internet media type", track.internet_media_type)
+
+                    if track.commercial_name is not None and track.commercial_name != track.format:
+                        mediatrack.append("Commercial name", track.commercial_name)
+
+                    str_codec = track_codec_to_str(track)
+
+                    if str_codec is not None:
+                        mediatrack.append("Codec", str_codec)
+
+                    mediatrack.append("Mode", track.mode)
+
+                    mediatrack.append("Channels", track.channel_s)
+
+                    if track.channel_layout is not None:
+                        mediatrack.append("Channels layout", track.channel_layout)
+
+                    if track.channel_positions is not None:
+                        mediatrack.append("Channels positions", track.channel_positions)
+
+                    mediatrack.append("Duration", track_duration_to_str(track))
+
+                    mediatrack.append("Sampling rate", str(track.sampling_rate) + " Hz")
+
+                    if track.samples_per_frame is not None:
+                        mediatrack.append("Samples per frame", track.samples_per_frame)
+
+                    if track.bit_rate is not None:
                         mediatrack.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
+
+                    if track.bit_rate_mode is not None:
+                        mediatrack.append("Bit rate mode", track.bit_rate_mode)
 
                     mediatrack.append("Compression mode", track.compression_mode)
 
