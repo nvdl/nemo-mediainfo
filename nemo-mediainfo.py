@@ -203,8 +203,12 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.bit_rate is not None:
                         mediatrack.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
 
-                    mediatrack.append("Bit depth", str(track.bit_depth) + " bits")
-                    mediatrack.append("Scan type", str(track.scan_type))
+                    if track.bit_depth is not None:
+                        mediatrack.append("Bit depth", str(track.bit_depth) + " bits")
+
+                    if track.scan_type is not None:
+                        mediatrack.append("Scan type", str(track.scan_type))
+
                     mediatrack.append("Compression mode", track.compression_mode)
 
                     mediafile.tracks.append(mediatrack)
