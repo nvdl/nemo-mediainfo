@@ -46,21 +46,25 @@ TIME_DURATION_UNITS = (
 # ==============================================================================
 def human_time_duration(seconds):
 
+    ret = None
+
     if seconds == 0:
-        return "inf"
-
-    parts = []
-
-    for unit, div in TIME_DURATION_UNITS:
-        amount, seconds = divmod(int(seconds), div)
-
-        if amount > 0:
-            parts.append("{} {}{}".format(amount, unit, "" if amount == 1 else "s"))
-
-    if len(parts) > 1:
-        ret = ", ".join(parts[:-1]) + " and " + parts[-1]
+        ret = "Unknown"
+    elif seconds < 1:
+        ret = "Less than a second"
     else:
-        ret = parts[0]
+        parts = []
+
+        for unit, div in TIME_DURATION_UNITS:
+            amount, seconds = divmod(int(seconds), div)
+
+            if amount > 0:
+                parts.append("{} {}{}".format(amount, unit, "" if amount == 1 else "s"))
+
+        if len(parts) > 1:
+            ret = ", ".join(parts[:-1]) + " and " + parts[-1]
+        else:
+            ret = parts[0]
 
     return ret
 # ==============================================================================
