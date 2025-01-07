@@ -57,7 +57,10 @@ def human_time_duration(seconds):
         if amount > 0:
             parts.append("{} {}{}".format(amount, unit, "" if amount == 1 else "s"))
 
-    ret = ", ".join(parts[:-1]) + " and " + parts[-1]
+    if len(parts) > 1:
+        ret = ", ".join(parts[:-1]) + " and " + parts[-1]
+    else:
+        ret = parts[0]
 
     return ret
 # ==============================================================================
