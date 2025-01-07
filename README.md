@@ -18,3 +18,8 @@ mkdir -p ~/.local/share/nemo-python/extensions
 cd ~/.local/share/nemo-python/extensions
 ln -s path/to/nemo-mediainfo.py
 ```
+
+Nemo needs to be restarted. Close all the instances or do:
+```
+killall nemo
+```
