@@ -44,15 +44,9 @@ TIME_DURATION_UNITS = (
     ("second", 1)
 )
 # ==============================================================================
-def human_time_duration(seconds):
+def human_time_duration(seconds) -> str:
 
-    ret = None
-
-    if seconds == 0:
-        ret = "Unknown"
-    elif seconds < 1:
-        ret = "Less than a second"
-    else:
+    if seconds >= 1:
         parts = []
 
         for unit, div in TIME_DURATION_UNITS:
@@ -66,11 +60,17 @@ def human_time_duration(seconds):
         else:
             ret = parts[0]
 
+    elif 0 < seconds < 1:
+        ret = "Less than a second"
+
+    else:
+        ret = "Unknown"
+
     return ret
 # ==============================================================================
-def track_format_info_to_str(track):
+def track_format_info_to_str(track) -> str:
 
-    str_format_info = None
+    str_format_info = ""
 
     if track.format is not None:
         str_format_info = track.format
@@ -78,9 +78,12 @@ def track_format_info_to_str(track):
         if track.format_info is not None:
             str_format_info += " (" + track.format_info + ")"
 
+        if track.format_profile is not None:
+            str_format_info += " (Profile: " + track.format_profile + ")"
+
     return str_format_info
 # ==============================================================================
-def track_duration_to_str(track):
+def track_duration_to_str(track) -> str:
 
     str_duration = human_time_duration(float(track.duration) / 1000)
 
@@ -89,9 +92,9 @@ def track_duration_to_str(track):
 
     return str_duration
 # ==============================================================================
-def track_codec_to_str(track):
+def track_codec_to_str(track) -> str:
 
-    str_codec = None
+    str_codec = ""
 
     if track.codec_id is not None:
         str_codec = track.codec_id
@@ -103,7 +106,7 @@ def track_codec_to_str(track):
 # ==============================================================================
 class MediaFile():
 
-    def __init__(self, filename, shortname):
+    def __init__(self, filename, shortname) -> None:
 
         self.filename = filename
         self.shortname = shortname
@@ -111,12 +114,12 @@ class MediaFile():
 # ==============================================================================
 class MediaFileTrack():
 
-    def __init__(self, name):
+    def __init__(self, name) -> None:
 
         self.name = name
         self.properties = []
 
-    def append(self, name, value):
+    def append(self, name, value) -> None:
 
         if value == None:
             return
@@ -125,56 +128,56 @@ class MediaFileTrack():
 # ==============================================================================
 class MediaFileTrackProperty():
 
-    def __init__(self, name, value):
+    def __init__(self, name, value) -> None:
 
         self.name = name
         self.value = value
 # ==============================================================================
 class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAndDescProvider):
 
-    def get_property_pages(self, files):
+    def get_property_pages(self, files) -> list[Nemo.PropertyPage]:
 
         actual_files = []
 
-        for i in files:
-            if i.get_uri_scheme() != "file":
+        for file in files:
+            if file.get_uri_scheme() != "file":
                 continue
 
-            if i.is_directory():
+            if file.is_directory():
                 continue
 
-            filename = urllib.parse.unquote(i.get_uri()[7:])
-            mediainfo = pymediainfo.MediaInfo.parse(filename)
+            filename = urllib.parse.unquote(file.get_uri()[7:])
+            media_info = pymediainfo.MediaInfo.parse(filename)
 
-            mediafile = MediaFile(filename, os.path.basename(filename))
+            media_file = MediaFile(filename, os.path.basename(filename))
 
-            if len(mediafile.shortname) > 30:
-                mediafile.shortname = mediafile.shortname[:30] + "..."
+            if len(media_file.shortname) > 30:
+                media_file.shortname = media_file.shortname[:30] + "..."
 
-            for track in mediainfo.tracks:
+            for track in media_info.tracks:
                 if track.track_type == "General":
-                    mediatrack = MediaFileTrack("General")
+                    media_track = MediaFileTrack("General")
 
                     if track.track_name is not None:
-                        mediatrack.append("Title", track.track_name)
+                        media_track.append("Title", track.track_name)
 
                     if track.performer is not None:
-                        mediatrack.append("Artist", track.performer)
+                        media_track.append("Artist", track.performer)
 
                     if track.album is not None:
-                        mediatrack.append("Album", track.album)
+                        media_track.append("Album", track.album)
 
                     if track.genre is not None:
-                        mediatrack.append("Genre", track.genre)
+                        media_track.append("Genre", track.genre)
 
                     if track.comment is not None:
-                        mediatrack.append("Comment", track.comment)
+                        media_track.append("Comment", track.comment)
 
-                    if len(mediatrack.properties) > 0:
-                        mediafile.tracks.append(mediatrack)
+                    if len(media_track.properties) > 0:
+                        media_file.tracks.append(media_track)
 
                 elif track.track_type == "Video":
-                    mediatrack = MediaFileTrack("Video")
+                    media_track = MediaFileTrack("Video")
 
                     fps = float(track.frame_rate)
 
@@ -183,120 +186,114 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
 
                     str_format_info = track_format_info_to_str(track)
 
-                    if str_format_info is not None:
-                        mediatrack.append("Format", str_format_info)
-
-                    if track.format_profile is not None:
-                        mediatrack.append("Format profile", track.format_profile)
+                    if str_format_info != "":
+                        media_track.append("Format", str_format_info)
 
                     if track.internet_media_type is not None:
-                        mediatrack.append("Internet media type", track.internet_media_type)
+                        media_track.append("Internet media type", track.internet_media_type)
 
                     str_codec = track_codec_to_str(track)
 
-                    if str_codec is not None:
-                        mediatrack.append("Codec", str_codec)
+                    if str_codec != "":
+                        media_track.append("Codec", str_codec)
 
-                    mediatrack.append("Frame rate", str(fps) + " FPS (" + str(track.frame_rate_mode) + ")")
+                    media_track.append("Frame rate", str(fps) + " FPS (" + str(track.frame_rate_mode) + ")")
 
-                    mediatrack.append("Width", str(track.width) + " pixels")
-                    mediatrack.append("Height", str(track.height) + " pixels")
+                    media_track.append("Width", str(track.width) + " pixels")
+                    media_track.append("Height", str(track.height) + " pixels")
 
                     if track.other_display_aspect_ratio is not None:
-                        mediatrack.append("Aspect ratio", ", ".join(track.other_display_aspect_ratio))
+                        media_track.append("Aspect ratio", ", ".join(track.other_display_aspect_ratio))
 
-                    mediatrack.append("Duration", track_duration_to_str(track))
+                    media_track.append("Duration", track_duration_to_str(track))
 
                     if track.bit_rate is not None:
-                        mediatrack.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
+                        media_track.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
 
                     if track.bit_depth is not None:
-                        mediatrack.append("Bit depth", str(track.bit_depth) + " bits")
+                        media_track.append("Bit depth", str(track.bit_depth) + " bits")
 
                     if track.scan_type is not None:
-                        mediatrack.append("Scan type", str(track.scan_type))
+                        media_track.append("Scan type", str(track.scan_type))
 
-                    mediatrack.append("Compression mode", track.compression_mode)
+                    media_track.append("Compression mode", track.compression_mode)
 
-                    mediafile.tracks.append(mediatrack)
+                    media_file.tracks.append(media_track)
 
                 elif track.track_type == "Audio":
-                    mediatrack = MediaFileTrack("Audio")
+                    media_track = MediaFileTrack("Audio")
 
                     str_format_info = track_format_info_to_str(track)
 
-                    if str_format_info is not None:
-                        mediatrack.append("Format", str_format_info)
-
-                    if track.format_profile is not None:
-                        mediatrack.append("Format profile", track.format_profile)
+                    if str_format_info != "":
+                        media_track.append("Format", str_format_info)
 
                     if track.internet_media_type is not None:
-                        mediatrack.append("Internet media type", track.internet_media_type)
+                        media_track.append("Internet media type", track.internet_media_type)
 
                     if track.commercial_name is not None and track.commercial_name != track.format:
-                        mediatrack.append("Commercial name", track.commercial_name)
+                        media_track.append("Commercial name", track.commercial_name)
 
                     str_codec = track_codec_to_str(track)
 
-                    if str_codec is not None:
-                        mediatrack.append("Codec", str_codec)
+                    if str_codec != "":
+                        media_track.append("Codec", str_codec)
 
-                    mediatrack.append("Mode", track.mode)
+                    media_track.append("Mode", track.mode)
 
-                    mediatrack.append("Channels", track.channel_s)
+                    media_track.append("Channels", track.channel_s)
 
                     if track.channel_layout is not None:
-                        mediatrack.append("Channels layout", track.channel_layout)
+                        media_track.append("Channels layout", track.channel_layout)
 
                     if track.channel_positions is not None:
-                        mediatrack.append("Channels positions", track.channel_positions)
+                        media_track.append("Channels positions", track.channel_positions)
 
-                    mediatrack.append("Duration", track_duration_to_str(track))
+                    media_track.append("Duration", track_duration_to_str(track))
 
-                    mediatrack.append("Sampling rate", str(track.sampling_rate) + " Hz")
+                    media_track.append("Sampling rate", str(track.sampling_rate) + " Hz")
 
                     if track.samples_per_frame is not None:
-                        mediatrack.append("Samples per frame", track.samples_per_frame)
+                        media_track.append("Samples per frame", track.samples_per_frame)
 
                     if track.bit_rate is not None:
-                        mediatrack.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
+                        media_track.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
 
                     if track.bit_rate_mode is not None:
-                        mediatrack.append("Bit rate mode", track.bit_rate_mode)
+                        media_track.append("Bit rate mode", track.bit_rate_mode)
 
-                    mediatrack.append("Compression mode", track.compression_mode)
+                    media_track.append("Compression mode", track.compression_mode)
 
-                    mediafile.tracks.append(mediatrack)
+                    media_file.tracks.append(media_track)
 
                 elif track.track_type == "Image":
-                    mediatrack = MediaFileTrack("Image")
+                    media_track = MediaFileTrack("Image")
 
-                    mediatrack.append("Format", track.format)
-                    mediatrack.append("Width", str(track.width) + " pixels")
-                    mediatrack.append("Height", str(track.height) + " pixels")
-                    mediatrack.append("Bit depth", str(track.bit_depth) + " bits")
-                    mediatrack.append("Color space", track.color_space)
-                    mediatrack.append("Color space (ICC)", track.colorspace_icc)
-                    mediatrack.append("Compression mode", track.compression_mode)
+                    media_track.append("Format", track.format)
+                    media_track.append("Width", str(track.width) + " pixels")
+                    media_track.append("Height", str(track.height) + " pixels")
+                    media_track.append("Bit depth", str(track.bit_depth) + " bits")
+                    media_track.append("Color space", track.color_space)
+                    media_track.append("Color space (ICC)", track.colorspace_icc)
+                    media_track.append("Compression mode", track.compression_mode)
 
-                    mediafile.tracks.append(mediatrack)
+                    media_file.tracks.append(media_track)
 
                     with open(filename, "rb") as fData:
                         tags = exifread.process_file(fData)
 
                     if len(tags) > 0:
-                        mediatrack.append("Camera brand", tags.get("Image Make", None))
-                        mediatrack.append("Camera model", tags.get("Image Model", None))
-                        mediatrack.append("Date taken", tags.get("Image DateTime", None))
+                        media_track.append("Camera brand", tags.get("Image Make", None))
+                        media_track.append("Camera model", tags.get("Image Model", None))
+                        media_track.append("Date taken", tags.get("Image DateTime", None))
 
                         if "EXIF ExposureTime" in tags:
-                            mediatrack.append("Exposure time", str(tags["EXIF ExposureTime"]) + " sec.")
+                            media_track.append("Exposure time", str(tags["EXIF ExposureTime"]) + " sec.")
 
-                        mediatrack.append("Flash fired", tags.get("EXIF Flash", None))
-                        mediatrack.append("Metering mode", tags.get("EXIF MeteringMode", None))
+                        media_track.append("Flash fired", tags.get("EXIF Flash", None))
+                        media_track.append("Metering mode", tags.get("EXIF MeteringMode", None))
 
-                        exifmediatrack = MediaFileTrack("Image EXIF Data")
+                        exif_media_track = MediaFileTrack("Image EXIF Data")
 
                         for tag in tags.keys():
                             if tag not in ("JPEGThumbnail",
@@ -305,14 +302,14 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                                            "EXIF MakerNote",
                                            "EXIF UserComment"
                                            ):
-                                exifmediatrack.append(tag, tags[tag])
+                                exif_media_track.append(tag, tags[tag])
 
-                        mediafile.tracks.append(exifmediatrack)
+                        media_file.tracks.append(exif_media_track)
 
-            if len(mediafile.tracks) == 0:
+            if len(media_file.tracks) == 0:
                 continue
 
-            actual_files.append(mediafile)
+            actual_files.append(media_file)
 
         if len(actual_files) == 0:
             return []
@@ -322,21 +319,22 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
 
         self.builder = Gtk.Builder()
         self.builder.add_from_string(GUI)
+
         self.treev: Gtk.TreeView = self.builder.get_object("treev")
 
         self.store = Gtk.TreeStore(str, str)
         self.treev.set_model(self.store)
 
-        for i in actual_files:
+        for file in actual_files:
             fileparent = None
 
             if len(actual_files) > 1:
-                fileparent = self.store.append(None, [i.shortname, ""])
+                fileparent = self.store.append(None, [file.shortname, ""])
 
-            for mt in i.tracks:
-                storetrack: Gtk.TreeIter = self.store.append(fileparent, [mt.name, ""])
+            for media_track in file.tracks:
+                storetrack: Gtk.TreeIter = self.store.append(fileparent, [media_track.name, ""])
 
-                for prop in mt.properties:
+                for prop in media_track.properties:
                     self.store.append(storetrack, [prop.name, str(prop.value)])
 
         self.treev.expand_all()
@@ -359,7 +357,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
             )
         ]
 
-    def get_name_and_desc(self):
+    def get_name_and_desc(self) -> list[str]:
 
-        return [("Nemo Media Tab:::View video/audio/image information from the properties tab in Nemo.")]
+        return ["Nemo Media Tab:::View video/audio/image information from the properties tab in Nemo."]
 # ==============================================================================
