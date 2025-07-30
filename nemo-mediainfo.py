@@ -106,18 +106,21 @@ def track_codec_to_str(track) -> str:
 # ==============================================================================
 class MediaFile():
 
-    def __init__(self, filename, shortname) -> None:
+    def __init__(self, filename) -> None:
 
         self.filename = filename
-        self.shortname = shortname
-        self.tracks = []
+        self.shortname = os.path.basename(filename)
+        self.tracks: list[MediaFileTrack] = []
+
+        if len(self.shortname) > 30:
+            self.shortname = self.shortname[:30] + "..."
 # ==============================================================================
 class MediaFileTrack():
 
     def __init__(self, name) -> None:
 
         self.name = name
-        self.properties = []
+        self.properties: list[MediaFileTrackProperty] = []
 
     def append(self, name, value) -> None:
 
@@ -133,6 +136,25 @@ class MediaFileTrackProperty():
         self.name = name
         self.value = value
 # ==============================================================================
+class TrackHEIC():
+
+    def __init__(self, exifTags) -> None:
+
+        self.track_type = "Image"
+        self.format = "HEIC"
+        self.width = exifTags["Image ImageWidth"]
+        self.height = exifTags["Image ImageLength"]
+        self.color_space = exifTags["EXIF ColorSpace"]
+
+        self.bit_depth = None
+        self.compression_mode = None
+# ==============================================================================
+class MediaInfoHEIC():
+
+    def __init__(self, exifTags) -> None:
+
+        self.tracks = [TrackHEIC(exifTags)]
+# ==============================================================================
 class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAndDescProvider):
 
     def get_property_pages(self, files) -> list[Nemo.PropertyPage]:
@@ -147,14 +169,26 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                 continue
 
             filename = urllib.parse.unquote(file.get_uri()[7:])
-            media_info = pymediainfo.MediaInfo.parse(filename)
 
-            media_file = MediaFile(filename, os.path.basename(filename))
+            _, extension = os.path.splitext(os.path.basename(filename))
+            extension = extension.lower()
 
-            if len(media_file.shortname) > 30:
-                media_file.shortname = media_file.shortname[:30] + "..."
+            exifTags = self.getExifTags(filename)
 
-            for track in media_info.tracks:
+            mediaInfo = None
+
+            if extension == ".heic":
+                if exifTags:
+                    mediaInfo = MediaInfoHEIC(exifTags)
+            else:
+                mediaInfo = pymediainfo.MediaInfo.parse(filename)
+
+            if mediaInfo is None:
+                return []
+
+            media_file = MediaFile(filename)
+
+            for track in mediaInfo.tracks:
                 if track.track_type == "General":
                     media_track = MediaFileTrack("General")
 
@@ -274,37 +308,34 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     media_track.append("Size (pixels)", str(track.width) +
                                        " (width) x " + str(track.height) + " (height)")
 
-                    media_track.append("Bit depth", str(track.bit_depth) + " bits")
+                    if track.bit_depth is not None:
+                        media_track.append("Bit depth", str(track.bit_depth) + " bits")
+
                     media_track.append("Color space", track.color_space)
-                    media_track.append("Color space (ICC)", track.colorspace_icc)
-                    media_track.append("Compression mode", track.compression_mode)
+
+                    if track.compression_mode is not None:
+                        media_track.append("Compression mode", track.compression_mode)
 
                     media_file.tracks.append(media_track)
 
-                    with open(filename, "rb") as fData:
-                        tags = exifread.process_file(fData)
-
-                    if len(tags) > 0:
-                        media_track.append("Camera brand", tags.get("Image Make", None))
-                        media_track.append("Camera model", tags.get("Image Model", None))
-                        media_track.append("Date taken", tags.get("Image DateTime", None))
-
-                        if "EXIF ExposureTime" in tags:
-                            media_track.append("Exposure time", str(tags["EXIF ExposureTime"]) + " sec.")
-
-                        media_track.append("Flash fired", tags.get("EXIF Flash", None))
-                        media_track.append("Metering mode", tags.get("EXIF MeteringMode", None))
-
+                    if (exifTags is not None) and (len(exifTags) > 0):
                         exif_media_track = MediaFileTrack("Image EXIF Data")
 
-                        for tag in tags.keys():
-                            if tag not in ("JPEGThumbnail",
-                                           "TIFFThumbnail",
-                                           "Filename",
-                                           "EXIF MakerNote",
-                                           "EXIF UserComment"
-                                           ):
-                                exif_media_track.append(tag, tags[tag])
+                        for tag, tagValue in exifTags.items():
+                            if tag in ("JPEGThumbnail",
+                                       "TIFFThumbnail",
+                                       "Filename",
+                                       "EXIF MakerNote",
+                                       "EXIF UserComment",
+                                       "EXIF ColorSpace",
+                                       "Image ImageWidth",
+                                       "Image ImageLength",
+                                       "EXIF ExifImageWidth",
+                                       "EXIF ExifImageLength"
+                                       ):
+                                continue
+
+                            exif_media_track.append(tag, tagValue)
 
                         media_file.tracks.append(exif_media_track)
 
@@ -362,4 +393,12 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
     def get_name_and_desc(self) -> list[str]:
 
         return ["Nemo Media Tab:::View video/audio/image information from the properties tab in Nemo."]
+
+    def getExifTags(self, filePath):
+        try:
+            with open(filePath, "rb") as fData:
+                tags = exifread.process_file(fData)
+                return tags
+        except Exception as e:
+            return None
 # ==============================================================================
