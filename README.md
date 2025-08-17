@@ -1,6 +1,7 @@
 # About This Fork
 * Fix issues with the missing explicit versions of PyGObject.
 * Add more fields to the media information.
+* Add support for HEIC images.
 
 # About
 View video, audio and image information from the properties tab in Nemo.
@@ -27,7 +28,7 @@ Create a soft link to the script:
 ```
 mkdir -p ~/.local/share/nemo-python/extensions
 cd ~/.local/share/nemo-python/extensions
-ln -s path/to/nemo-mediainfo.py
+ln -s /path/to/nemo-mediainfo.py
 ```
 
 Nemo needs to be restarted. Close all the instances or do:
