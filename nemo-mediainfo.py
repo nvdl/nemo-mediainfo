@@ -201,6 +201,9 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.album is not None:
                         media_track.append("Album", track.album)
 
+                    if track.track_name_position is not None:
+                        media_track.append("Track Number", track.track_name_position)
+
                     if track.genre is not None:
                         media_track.append("Genre", track.genre)
 
