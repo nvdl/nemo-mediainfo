@@ -296,6 +296,9 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.samples_per_frame is not None:
                         media_track.append("Samples per frame", track.samples_per_frame)
 
+                    if track.bit_depth is not None:
+                        media_track.append("Bit depth", str(track.bit_depth) + " bits")
+
                     if track.bit_rate is not None:
                         media_track.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
 
