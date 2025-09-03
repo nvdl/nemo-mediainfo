@@ -245,7 +245,8 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.other_display_aspect_ratio is not None:
                         media_track.append("Aspect ratio", ", ".join(track.other_display_aspect_ratio))
 
-                    media_track.append("Duration", track_duration_to_str(track))
+                    if track.duration is not None:
+                        media_track.append("Duration", track_duration_to_str(track))
 
                     if track.bit_rate is not None:
                         media_track.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
@@ -289,15 +290,17 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.channel_positions is not None:
                         media_track.append("Channels positions", track.channel_positions)
 
-                    media_track.append("Duration", track_duration_to_str(track))
-
-                    media_track.append("Sampling rate", str(track.sampling_rate) + " Hz")
-
-                    if track.samples_per_frame is not None:
-                        media_track.append("Samples per frame", track.samples_per_frame)
+                    if track.duration is not None:
+                        media_track.append("Duration", track_duration_to_str(track))
 
                     if track.bit_depth is not None:
                         media_track.append("Bit depth", str(track.bit_depth) + " bits")
+
+                    if track.sampling_rate is not None:
+                        media_track.append("Sampling rate", str(track.sampling_rate) + " Hz")
+
+                    if track.samples_per_frame is not None:
+                        media_track.append("Samples per frame", track.samples_per_frame)
 
                     if track.bit_rate is not None:
                         media_track.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
@@ -305,7 +308,8 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.bit_rate_mode is not None:
                         media_track.append("Bit rate mode", track.bit_rate_mode)
 
-                    media_track.append("Compression mode", track.compression_mode)
+                    if track.compression_mode is not None:
+                        media_track.append("Compression mode", track.compression_mode)
 
                     media_file.tracks.append(media_track)
 
