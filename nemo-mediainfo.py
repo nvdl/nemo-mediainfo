@@ -304,6 +304,12 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
 
                     if track.bit_rate is not None:
                         media_track.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
+                    else:
+                        tracksGeneral = [trck for trck in mediaInfo.tracks if trck.track_type == "General"]
+                        if len(tracksGeneral):
+                            track2 = tracksGeneral[0]
+                            if track2.overall_bit_rate is not None:
+                                media_track.append("Bit rate", str(track2.overall_bit_rate / 1000) + " kbps")
 
                     if track.bit_rate_mode is not None:
                         media_track.append("Bit rate mode", track.bit_rate_mode)
