@@ -317,6 +317,9 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.compression_mode is not None:
                         media_track.append("Compression mode", track.compression_mode)
 
+                    if track.compression_ratio is not None:
+                        media_track.append("Compression ratio", track.compression_ratio)
+
                     media_file.tracks.append(media_track)
 
                 elif track.track_type == "Image":
