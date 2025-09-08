@@ -216,7 +216,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                             media_track.append("Comment", trackComment)
 
                     if track.overall_bit_rate is not None:
-                        media_track.append("Overall Bit Rate", str(track.overall_bit_rate / 1000) + " kbps")
+                        media_track.append("Overall bit rate", str(track.overall_bit_rate / 1000) + " kbps")
 
                     if len(media_track.properties) > 0:
                         media_file.tracks.append(media_track)
@@ -438,6 +438,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
         return ["Nemo Media Tab:::View video/audio/image information from the properties tab in Nemo."]
 
     def getExifTags(self, filePath):
+
         try:
             with open(filePath, "rb") as fData:
                 tags = exifread.process_file(fData)
