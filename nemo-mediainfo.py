@@ -210,8 +210,10 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.genre is not None:
                         media_track.append("Genre", track.genre)
 
-                    if track.comment is not None:
-                        media_track.append("Comment", track.comment)
+                    if (track.comment is not None):
+                        trackComment = track.comment.strip()
+                        if trackComment != "":
+                            media_track.append("Comment", trackComment)
 
                     if track.overall_bit_rate is not None:
                         media_track.append("Overall Bit Rate", str(track.overall_bit_rate / 1000) + " kbps")
