@@ -104,6 +104,17 @@ def track_codec_to_str(track) -> str:
 
     return str_codec
 # ==============================================================================
+def track_bitrate_to_str(bitrate) -> str:
+
+    if bitrate > 1e6:
+        bitrateStr = str(round(bitrate / 1000000, 3)) + " mbps"
+    elif bitrate > 1e3:
+        bitrateStr = str(round(bitrate / 1000, 3)) + " kbps"
+    else:
+        bitrateStr = str(round(bitrate, 3)) + " bps"
+
+    return bitrateStr
+# ==============================================================================
 class MediaFile():
 
     def __init__(self, filename) -> None:
@@ -216,7 +227,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                             media_track.append("Comment", trackComment)
 
                     if track.overall_bit_rate is not None:
-                        media_track.append("Overall bit rate", str(track.overall_bit_rate / 1000) + " kbps")
+                        media_track.append("Overall bit rate", track_bitrate_to_str(track.overall_bit_rate))
 
                     if len(media_track.properties) > 0:
                         media_file.tracks.append(media_track)
@@ -242,8 +253,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if str_codec != "":
                         media_track.append("Codec", str_codec)
 
-                    media_track.append("Frame rate", str(fps) + " FPS (" + str(track.frame_rate_mode) + ")")
-
+                    media_track.append("Frame rate / Mode", str(fps) + " FPS / " + str(track.frame_rate_mode))
                     media_track.append("Size (w x h) (pixels)", str(track.width) + " x " + str(track.height))
 
                     if track.other_display_aspect_ratio is not None:
@@ -253,7 +263,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                         media_track.append("Duration", track_duration_to_str(track))
 
                     if track.bit_rate is not None:
-                        media_track.append("Bit rate", str(track.bit_rate / 1000) + " kbps")
+                        media_track.append("Bit rate", track_bitrate_to_str(track.bit_rate))
 
                     if track.bit_depth is not None:
                         media_track.append("Bit depth", str(track.bit_depth) + " bits")
@@ -322,11 +332,11 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
 
                     if track.bit_rate is not None:
                         bitRateModeTitle += "Bit rate"
-                        bitRateModeStr += str(track.bit_rate / 1000) + " kbps"
+                        bitRateModeStr += track_bitrate_to_str(track.bit_rate)
                     elif track.nominal_bit_rate is not None:
                         bitRateModeTitle += "Bit rate"
-                        bitRateModeStr += str(track.nominal_bit_rate / 1000) + " kbps"
-    
+                        bitRateModeStr += track_bitrate_to_str(track.nominal_bit_rate)
+
                     if track.bit_rate_mode is not None:
                         bitRateModeTitle += " / Mode"
                         bitRateModeStr += " / " + str(track.bit_rate_mode)
