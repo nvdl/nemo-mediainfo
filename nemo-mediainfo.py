@@ -226,6 +226,11 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                         if trackComment != "":
                             media_track.append("Comment", trackComment)
 
+                    if (track.description is not None):
+                        trackDescription = track.description.strip()
+                        if trackDescription != "":
+                            media_track.append("Description", trackDescription)
+
                     if track.overall_bit_rate is not None:
                         media_track.append("Overall bit rate", track_bitrate_to_str(track.overall_bit_rate))
 
