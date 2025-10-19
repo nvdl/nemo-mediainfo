@@ -259,7 +259,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                         media_track.append("Codec", str_codec)
 
                     media_track.append("Frame rate / Mode", str(fps) + " FPS / " + str(track.frame_rate_mode))
-                    media_track.append("Size (w x h) (pixels)", str(track.width) + " x " + str(track.height))
+                    media_track.append("Size (w x h)", str(track.width) + " x " + str(track.height) + " pixel(s)")
 
                     if track.other_display_aspect_ratio is not None:
                         media_track.append("Aspect ratio", ", ".join(track.other_display_aspect_ratio))
@@ -363,7 +363,7 @@ class MediaPropertyPage(GObject.GObject, Nemo.PropertyPageProvider, Nemo.NameAnd
                     if track.format is not None:
                         media_track.append("Format", track.format)
 
-                    media_track.append("Size (w x h) (pixels)", str(track.width) + " x " + str(track.height))
+                    media_track.append("Size (w x h)", str(track.width) + " x " + str(track.height) + " pixel(s)")
 
                     if track.bit_depth is not None:
                         media_track.append("Bit depth", str(track.bit_depth) + " bits")
