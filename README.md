@@ -20,6 +20,7 @@ sudo apt install nemo-python python3-pymediainfo python3-exifread
 For supporting HEIC images as well (latest version of "exifread" has issues with HEIC files):
 ```
 sudo apt purge python3-exifread
+sudo apt install python3-pip
 sudo pip3 install 'exifread==2.3.2' --break-system-packages
 sudo apt install nemo-python python3-pymediainfo
 ```
